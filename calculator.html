@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate 15-in-1 Calculator & Converter</title>
+    <style>
+        /* ১. ডিজাইন এবং থিম (CSS) - অ্যাপের রঙ এবং বাটন স্টাইল */
+        :root {
+            --bg: #0f172a; --card: #1e293b; --accent: #10b981;
+            --sci: #6366f1; --text: #ffffff; --border: rgba(255, 255, 255, 0.1);
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { width: 100%; max-width: 450px; background: var(--card); border-radius: 30px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--border); }
+        .tabs { display: flex; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 15px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; border-radius: 10px; }
+        .tab-btn.active { background: var(--sci); color: white; }
+        .display { background: #000; padding: 25px; border-radius: 20px; text-align: right; margin-bottom: 20px; border: 1px solid #334155; }
+        #screen { font-size: 32px; color: var(--accent); min-height: 40px; word-wrap: break-word; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .conv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        button { height: 55px; border-radius: 12px; border: 1px solid var(--border); background: #334155; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        .btn-sci { background: #475569; font-size: 14px; }
+        .btn-op { background: #f59e0b; }
+        .btn-ac { background: #ef4444; }
+        .btn-eq { background: var(--accent); grid-column: span 2; }
+        .conv-item { background: #334155; padding: 15px 5px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+        .conv-item:hover { background: var(--sci); border-color: white; }
+        
+        /* ২. পপ-আপ (Modal) ডিজাইন */
+        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card); padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; z-index: 100; border: 1px solid var(--sci); box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 99; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; background: #0f172a; color: white; border: 1px solid #334155; box-sizing: border-box; }
+        .content { display: none; }
+        .content.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="overlay" onclick="closeModal()"></div>
+
+<div id="modal">
+    <h3 id="modal-title" style="margin-top:0; color: var(--sci);">Converter</h3>
+    
+    <div id="bmi-inputs" style="display:none;">
+        <input type="number" id="weight" placeholder="ওজন (কেজি)" oninput="calcBMI()">
+        <input type="number" id="height" placeholder="উচ্চতা (সেমি)" oninput="calcBMI()">
+    </div>
+
+    <div id="age-inputs" style="display:none;">
+        <label style="font-size: 13px; color: #94a3b8;">জন্ম তারিখ নির্বাচন করুন:</label>
+        <input type="date" id="birth-date" oninput="calcAge()">
+    </div>
+
+    <div id="standard-inputs">
+        <input type="number" id="unit-input" placeholder="মান লিখুন" oninput="convert()">
+        <select id="unit-from" onchange="convert()"></select>
+        <div style="text-align: center; color: var(--accent);">⬇️</div>
+        <select id="unit-to" onchange="convert()"></select>
+    </div>
+
+    <div id="unit-result" style="font-size: 18px; color: var(--accent); font-weight: bold; text-align: center; margin-top:15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">Result: 0</div>
+    <button onclick="closeModal()" style="width: 100%; margin-top: 15px; background: #ef4444;">বন্ধ করুন</button>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('calc')">ক্যালকুলেটর</button>
+        <button class="tab-btn" onclick="openTab('conv')">কনভার্টার</button>
+    </div>
+
+    <div id="calc" class="content active">
+        <div class="display"><div id="screen">0</div></div>
+        <div class="grid">
+            <button class="btn-sci" onclick="sci('sin')">sin</button>
+            <button class="btn-sci" onclick="sci('cos')">cos</button>
+            <button class="btn-sci" onclick="sci('tan')">tan</button>
+            <button class="btn-sci" onclick="add('Math.PI')">π</button>
+            <button class="btn-sci" onclick="sci('log')">log</button>
+            <button class="btn-sci" onclick="add('**2')">x²</button>
+            <button class="btn-sci" onclick="add('**')">xʸ</button>
+            <button class="btn-sci" onclick="sci('sqrt')">√</button>
+            <button class="btn-ac" onclick="clr()">AC</button>
+            <button onclick="del()">⌫</button>
+            <button onclick="add('(')">(</button>
+            <button class="btn-op" onclick="add('/')">÷</button>
+            <button onclick="add('7')">7</button><button onclick="add('8')">8</button><button onclick="add('9')">9</button>
+            <button class="btn-op" onclick="add('*')">×</button>
+            <button onclick="add('4')">4</button><button onclick="add('5')">5</button><button onclick="add('6')">6</button>
+            <button class="btn-op" onclick="add('-')">−</button>
+            <button onclick="add('1')">1</button><button onclick="add('2')">2</button><button onclick="add('3')">3</button>
+            <button class="btn-op" onclick="add('+')">+</button>
+            <button onclick="add('0')">0</button><button onclick="add('.')">.</button>
+            <button class="btn-eq" onclick="calc()">=</button>
+        </div>
+    </div>
+
+    <div id="conv" class="content">
+        <div class="conv-grid">
+            <div class="conv-item" onclick="openModal('Age')">🎂<br>Age</div>
+            <div class="conv-item" onclick="openModal('BMI')">🏥<br>BMI</div>
+            <div class="conv-item" onclick="openModal('Length')">📏<br>Length</div>
+            <div class="conv-item" onclick="openModal('Mass')">⚖️<br>Mass</div>
+            <div class="conv-item" onclick="openModal('Temperature')">🌡️<br>Temp</div>
+            <div class="conv-item" onclick="openModal('Time')">🕒<br>Time</div>
+            <div class="conv-item" onclick="openModal('Data')">💾<br>Data</div>
+            <div class="conv-item" onclick="openModal('Base')">🔢<br>Base</div>
+            <div class="conv-item" onclick="openModal('Area')">📐<br>Area</div>
+            <div class="conv-item" onclick="openModal('Volume')">🥛<br>Volume</div>
+            <div class="conv-item" onclick="openModal('Fuel')">⛽<br>Fuel</div>
+            <div class="conv-item" onclick="openModal('Speed')">🚀<br>Speed</div>
+            <div class="conv-item" onclick="openModal('Energy')">⚡<br>Energy</div>
+            <div class="conv-item" onclick="openModal('Pressure')">💨<br>Pressure</div>
+            <div class="conv-item" onclick="openModal('Currency')">💰<br>Money</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ৭. ট্যাব পরিবর্তন করার ফাংশন
+    function openTab(name) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(name).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // ৮. ক্যালকুলেটর ফাংশনালিটি
+    let scr = document.getElementById('screen');
+    function add(v) { if(scr.innerText==='0') scr.innerText=v; else scr.innerText+=v; }
+    function clr() { scr.innerText='0'; }
+    function del() { scr.innerText = scr.innerText.slice(0,-1) || '0'; }
+    function calc() { try { scr.innerText = eval(scr.innerText); } catch { scr.innerText='Error'; } }
+    
+    // সায়েন্টিফিক হিসাব (sin, cos, log ইত্যাদি)
+    function sci(t) {
+        let n = parseFloat(scr.innerText);
+        if(t==='sin') scr.innerText = Math.sin(n*Math.PI/180).toFixed(4);
+        if(t==='cos') scr.innerText = Math.cos(n*Math.PI/180).toFixed(4);
+        if(t==='tan') scr.innerText = Math.tan(n*Math.PI/180).toFixed(4);
+        if(t==='log') scr.innerText = Math.log10(n).toFixed(4);
+        if(t==='sqrt') scr.innerText = Math.sqrt(n).toFixed(4);
+    }
+
+    // ৯. কনভার্টার ডেটা (বেস ইউনিট হিসেবে ১ ধরা হয়েছে)
+    const units = {
+        Length: { Meter: 1, KM: 1000, CM: 0.01, Foot: 0.3048, Inch: 0.0254, Mile: 1609.34 },
+        Mass: { KG: 1, Gram: 0.001, Pound: 0.4535, Ton: 1000 },
+        Time: { Second: 1, Minute: 60, Hour: 3600, Day: 86400, Year: 31536000 },
+        Data: { MB: 1, GB: 1024, KB: 0.00097, TB: 1048576, Byte: 0.00000095 },
+        Base: { Decimal: 10, Binary: 2, Octal: 8, Hex: 16 },
+        Fuel: { "MPG (US)": 1, "MPG (UK)": 1.201, "L/100km": "special" },
+        Area: { "Sq Meter": 1, Acre: 4046.86, Bigha: 1337.8, "Sq KM": 1000000 },
+        Volume: { Liter: 1, ML: 0.001, Gallon: 3.785, CubicMeter: 1000 },
+        Speed: { "m/s": 1, "km/h": 0.2777, "mph": 0.4470, "Knot": 0.5144 },
+        Energy: { Joule: 1, Calorie: 4.184, KWh: 3600000, BTU: 1055.06 },
+        Pressure: { Pascal: 1, Bar: 100000, PSI: 6894.76, Atm: 101325 },
+        Currency: { USD: 1, BDT: 0.0083, EUR: 1.08, INR: 0.012 }
+    };
+
+    let activeCat = '';
+
+    // ১০. কনভার্টার পপ-আপ খোলার মেইন ফাংশন
+    function openModal(cat) {
+        activeCat = cat;
+        document.getElementById('modal-title').innerText = cat + " Converter";
+        let from = document.getElementById('unit-from');
+        let to = document.getElementById('unit-to');
+        
+        // সব ভিউ রিসেট
+        document.getElementById('bmi-inputs').style.display = 'none';
+        document.getElementById('age-inputs').style.display = 'none';
+        document.getElementById('standard-inputs').style.display = 'none';
+        document.getElementById('unit-result').innerText = "Result: 0";
+        from.innerHTML = ''; to.innerHTML = '';
+
+        if(cat === 'BMI') {
+            document.getElementById('bmi-inputs').style.display = 'block';
+        } else if(cat === 'Age') {
+            document.getElementById('age-inputs').style.display = 'block';
+        } else {
+            document.getElementById('standard-inputs').style.display = 'block';
+            let options = (cat === 'Temperature') ? ['Celsius', 'Fahrenheit', 'Kelvin'] : Object.keys(units[cat]);
+            options.forEach(u => {
+                from.innerHTML += `<option value="${u}">${u}</option>`;
+                to.innerHTML += `<option value="${u}">${u}</option>`;
+            });
+        }
+        document.getElementById('modal').style.display = 'block';
+        document.querySelector('.overlay').style.display = 'block';
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; document.querySelector('.overlay').style.display = 'none'; }
+
+    // ১১. রূপান্তর করার মেইন লজিক
+    function convert() {
+        let val = parseFloat(document.getElementById('unit-input').value);
+        let uFrom = document.getElementById('unit-from').value;
+        let uTo = document.getElementById('unit-to').value;
+        if(isNaN(val)) return;
+
+        let res = 0;
+        if(activeCat === 'Temperature') {
+            res = tempCalc(val, uFrom, uTo);
+        } else if(activeCat === 'Base') {
+            // সংখ্যা পদ্ধতির রূপান্তর (Decimal, Binary ইত্যাদি)
+            res = parseInt(val, units.Base[uFrom]).toString(units.Base[uTo]).toUpperCase();
+        } else if(activeCat === 'Fuel') {
+            res = fuelCalc(val, uFrom, uTo);
+        } else {
+            // সাধারণ গাণিতিক রূপান্তর
+            res = ((val * units[activeCat][uFrom]) / units[activeCat][uTo]).toFixed(4);
+        }
+        document.getElementById('unit-result').innerText = "Result: " + res;
+    }
+
+    // তাপমাত্রা কনভার্টার লজিক
+    function tempCalc(v, f, t) {
+        let c = (f === 'Celsius') ? v : (f === 'Fahrenheit') ? (v-32)*5/9 : v-273.15;
+        let res = (t === 'Celsius') ? c : (t === 'Fahrenheit') ? (c*9/5)+32 : c+273.15;
+        return res.toFixed(2);
+    }
+
+    // ফুয়েল কনভার্টার লজিক
+    function fuelCalc(v, f, t) {
+        if (f === t) return v;
+        if (t === 'L/100km') return (235.215 / v).toFixed(2);
+        if (f === 'L/100km') return (235.215 / v).toFixed(2);
+        return ((v * units.Fuel[f]) / units.Fuel[t]).toFixed(2);
+    }
+
+    // বয়স গণনা করার লজিক
+    function calcAge() {
+        let birth = new Date(document.getElementById('birth-date').value);
+        let now = new Date();
+        if (isNaN(birth)) return;
+        let y = now.getFullYear() - birth.getFullYear();
+        let m = now.getMonth() - birth.getMonth();
+        let d = now.getDate() - birth.getDate();
+        if (d < 0) { m--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+        if (m < 0) { y--; m += 12; }
+        document.getElementById('unit-result').innerText = `${y} বছর, ${m} মাস, ${d} দিন`;
+    }
+
+    // BMI ক্যালকুলেশন লজিক
+    function calcBMI() {
+        let w = parseFloat(document.getElementById('weight').value);
+        let h = parseFloat(document.getElementById('height').value) / 100;
+        if(w > 0 && h > 0) {
+            let bmi = (w / (h * h)).toFixed(2);
+            let status = (bmi < 18.5) ? "(Underweight)" : (bmi < 25) ? "(Normal)" : "(Overweight)";
+            document.getElementById('unit-result').innerText = "BMI: " + bmi + " " + status;
+        }
+    }
+</script>
+</body>
+</html>
