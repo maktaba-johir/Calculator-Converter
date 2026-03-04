@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate 15-in-1 Calculator & Converter</title>
+    <title>Ultimate 18-in-1 Calculator & Islamic Converter</title>
     <style>
-        /* ১. ডিজাইন এবং থিম (CSS) - অ্যাপের রঙ এবং বাটন স্টাইল */
+        /* ১. ডিজাইন এবং থিম (CSS) */
         :root {
             --bg: #0f172a; --card: #1e293b; --accent: #10b981;
             --sci: #6366f1; --text: #ffffff; --border: rgba(255, 255, 255, 0.1);
@@ -25,7 +25,7 @@
         .btn-op { background: #f59e0b; }
         .btn-ac { background: #ef4444; }
         .btn-eq { background: var(--accent); grid-column: span 2; }
-        .conv-item { background: #334155; padding: 15px 5px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+        .conv-item { background: #334155; padding: 15px 5px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid transparent; font-size: 14px; }
         .conv-item:hover { background: var(--sci); border-color: white; }
         
         /* ২. পপ-আপ (Modal) ডিজাইন */
@@ -51,6 +51,10 @@
     <div id="age-inputs" style="display:none;">
         <label style="font-size: 13px; color: #94a3b8;">জন্ম তারিখ নির্বাচন করুন:</label>
         <input type="date" id="birth-date" oninput="calcAge()">
+    </div>
+
+    <div id="islamic-inputs" style="display:none;">
+        <input type="number" id="silver-price" placeholder="প্রতি ভরি রূপার মূল্য লিখুন" oninput="calcIslamic()">
     </div>
 
     <div id="standard-inputs">
@@ -98,6 +102,10 @@
 
     <div id="conv" class="content">
         <div class="conv-grid">
+            <div class="conv-item" onclick="openModal('Zakat')">🌙<br>نصاب الزكاة</div>
+            <div class="conv-item" onclick="openModal('MinMohr')">💍<br>أقل المهر</div>
+            <div class="conv-item" onclick="openModal('FatemiMohr')">✨<br>مهر الفاطمي</div>
+            
             <div class="conv-item" onclick="openModal('Age')">🎂<br>Age</div>
             <div class="conv-item" onclick="openModal('BMI')">🏥<br>BMI</div>
             <div class="conv-item" onclick="openModal('Length')">📏<br>Length</div>
@@ -118,7 +126,6 @@
 </div>
 
 <script>
-    // ৭. ট্যাব পরিবর্তন করার ফাংশন
     function openTab(name) {
         document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -126,14 +133,12 @@
         event.currentTarget.classList.add('active');
     }
 
-    // ৮. ক্যালকুলেটর ফাংশনালিটি
     let scr = document.getElementById('screen');
     function add(v) { if(scr.innerText==='0') scr.innerText=v; else scr.innerText+=v; }
     function clr() { scr.innerText='0'; }
     function del() { scr.innerText = scr.innerText.slice(0,-1) || '0'; }
     function calc() { try { scr.innerText = eval(scr.innerText); } catch { scr.innerText='Error'; } }
     
-    // সায়েন্টিফিক হিসাব (sin, cos, log ইত্যাদি)
     function sci(t) {
         let n = parseFloat(scr.innerText);
         if(t==='sin') scr.innerText = Math.sin(n*Math.PI/180).toFixed(4);
@@ -143,7 +148,6 @@
         if(t==='sqrt') scr.innerText = Math.sqrt(n).toFixed(4);
     }
 
-    // ৯. কনভার্টার ডেটা (বেস ইউনিট হিসেবে ১ ধরা হয়েছে)
     const units = {
         Length: { Meter: 1, KM: 1000, CM: 0.01, Foot: 0.3048, Inch: 0.0254, Mile: 1609.34 },
         Mass: { KG: 1, Gram: 0.001, Pound: 0.4535, Ton: 1000 },
@@ -161,24 +165,27 @@
 
     let activeCat = '';
 
-    // ১০. কনভার্টার পপ-আপ খোলার মেইন ফাংশন
     function openModal(cat) {
         activeCat = cat;
-        document.getElementById('modal-title').innerText = cat + " Converter";
+        document.getElementById('modal-title').innerText = cat;
         let from = document.getElementById('unit-from');
         let to = document.getElementById('unit-to');
         
-        // সব ভিউ রিসেট
         document.getElementById('bmi-inputs').style.display = 'none';
         document.getElementById('age-inputs').style.display = 'none';
+        document.getElementById('islamic-inputs').style.display = 'none';
         document.getElementById('standard-inputs').style.display = 'none';
         document.getElementById('unit-result').innerText = "Result: 0";
+        document.getElementById('silver-price').value = '';
         from.innerHTML = ''; to.innerHTML = '';
 
         if(cat === 'BMI') {
             document.getElementById('bmi-inputs').style.display = 'block';
         } else if(cat === 'Age') {
             document.getElementById('age-inputs').style.display = 'block';
+        } else if(['Zakat', 'MinMohr', 'FatemiMohr'].includes(cat)) {
+            document.getElementById('islamic-inputs').style.display = 'block';
+            document.getElementById('modal-title').innerText = (cat==='Zakat')?'نصاب الزكاة':(cat==='MinMohr')?'أقل المهر':'مهر الفاطمي';
         } else {
             document.getElementById('standard-inputs').style.display = 'block';
             let options = (cat === 'Temperature') ? ['Celsius', 'Fahrenheit', 'Kelvin'] : Object.keys(units[cat]);
@@ -193,7 +200,25 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; document.querySelector('.overlay').style.display = 'none'; }
 
-    // ১১. রূপান্তর করার মেইন লজিক
+    // যাকাত ও মোহর ক্যালকুলেশন লজিক
+    function calcIslamic() {
+        let price = parseFloat(document.getElementById('silver-price').value);
+        if(isNaN(price) || price <= 0) return;
+        let res = "";
+        
+        if(activeCat === 'Zakat') {
+            let total = (price * 52.5).toFixed(2);
+            res = `বর্তমান যাকাতের নিসাব: ${total} টাকা`;
+        } else if(activeCat === 'MinMohr') {
+            let total = (price * 2.625).toFixed(2);
+            res = `সর্বনিম্ন মোহর (আকাল্লে মহর): ${total} টাকা`;
+        } else if(activeCat === 'FatemiMohr') {
+            let total = (price * 131.25).toFixed(2);
+            res = `সুন্নতি মোহরে ফাতেমি: ${total} টাকা`;
+        }
+        document.getElementById('unit-result').innerText = res;
+    }
+
     function convert() {
         let val = parseFloat(document.getElementById('unit-input').value);
         let uFrom = document.getElementById('unit-from').value;
@@ -204,25 +229,21 @@
         if(activeCat === 'Temperature') {
             res = tempCalc(val, uFrom, uTo);
         } else if(activeCat === 'Base') {
-            // সংখ্যা পদ্ধতির রূপান্তর (Decimal, Binary ইত্যাদি)
             res = parseInt(val, units.Base[uFrom]).toString(units.Base[uTo]).toUpperCase();
         } else if(activeCat === 'Fuel') {
             res = fuelCalc(val, uFrom, uTo);
         } else {
-            // সাধারণ গাণিতিক রূপান্তর
             res = ((val * units[activeCat][uFrom]) / units[activeCat][uTo]).toFixed(4);
         }
         document.getElementById('unit-result').innerText = "Result: " + res;
     }
 
-    // তাপমাত্রা কনভার্টার লজিক
     function tempCalc(v, f, t) {
         let c = (f === 'Celsius') ? v : (f === 'Fahrenheit') ? (v-32)*5/9 : v-273.15;
         let res = (t === 'Celsius') ? c : (t === 'Fahrenheit') ? (c*9/5)+32 : c+273.15;
         return res.toFixed(2);
     }
 
-    // ফুয়েল কনভার্টার লজিক
     function fuelCalc(v, f, t) {
         if (f === t) return v;
         if (t === 'L/100km') return (235.215 / v).toFixed(2);
@@ -230,7 +251,6 @@
         return ((v * units.Fuel[f]) / units.Fuel[t]).toFixed(2);
     }
 
-    // বয়স গণনা করার লজিক
     function calcAge() {
         let birth = new Date(document.getElementById('birth-date').value);
         let now = new Date();
@@ -243,7 +263,6 @@
         document.getElementById('unit-result').innerText = `${y} বছর, ${m} মাস, ${d} দিন`;
     }
 
-    // BMI ক্যালকুলেশন লজিক
     function calcBMI() {
         let w = parseFloat(document.getElementById('weight').value);
         let h = parseFloat(document.getElementById('height').value) / 100;
